@@ -10,6 +10,8 @@ using System.Xml;
 using System.IO;
 using log4net;
 using System.Windows.Controls;
+using Microsoft.TeamFoundation.Framework.Client;
+using Microsoft.TeamFoundation.Framework.Common;
 
 namespace TFSProjectMigration
 {
@@ -26,6 +28,8 @@ namespace TFSProjectMigration
         public Hashtable itemMap;
         public Hashtable itemMapCIC;
         private static readonly ILog logger = LogManager.GetLogger(typeof(TFSWorkItemMigrationUI));
+        private IIdentityManagementService ims;
+        private TeamFoundationIdentity UserID;
 
         public WorkItemWrite(TfsTeamProjectCollection tfs, Project destinationProject)
         {
@@ -37,6 +41,7 @@ namespace TFSProjectMigration
             workItemTypes = store.Projects[destinationProject.Name].WorkItemTypes;
             itemMap = new Hashtable();
             itemMapCIC = new Hashtable();
+            ims = (IIdentityManagementService)tfs.GetService(typeof(IIdentityManagementService));
         }
 
         //get all workitems from tfs
@@ -45,7 +50,7 @@ namespace TFSProjectMigration
             WorkItemCollection workItemCollection = store.Query(" SELECT * " +
                                                                   " FROM WorkItems " +
                                                                   " WHERE [System.TeamProject] = '" + projectName +
-                                                                  "' ORDER BY [System.Id]");
+                                                                  "' AND [System.AreaPath] = 'Clef\\DevOps' ORDER BY [System.Id]");
             return workItemCollection;
         }
 
@@ -171,14 +176,6 @@ namespace TFSProjectMigration
                 {
                     newWorkItem = new WorkItem(workItemTypes[workItem.Type.Name]);
                 }
-                else if (workItem.Type.Name == "User Story")
-                {
-                    newWorkItem = new WorkItem(workItemTypes["Product Backlog Item"]);
-                }
-                else if (workItem.Type.Name == "Issue")
-                {
-                    newWorkItem = new WorkItem(workItemTypes["Impediment"]);
-                }
                 else
                 {
                     logger.InfoFormat("Work Item Type {0} does not exist in target TFS", workItem.Type.Name);
@@ -191,6 +188,46 @@ namespace TFSProjectMigration
                     if (field.Name.Contains("ID") || field.Name.Contains("State") || field.Name.Contains("Reason"))
                     {
                         continue;
+                    }
+
+                    if (field.Name == "Assigned To" || field.Name == "Activated By")
+                    {
+                        workItem.Open();
+                        if (!String.IsNullOrEmpty(field.Value.ToString()))
+                        {
+                            if (field.Value.ToString().Equals("Adam Coulter"))
+                            {
+                                workItem.Fields[field.Name].Value = "adam.coulter@accenture.com";
+                            }                           
+                            else
+                            {
+                                if (field.Value.ToString().Contains("Hitendra"))
+                                {
+                                    field.Value = "hitendra.solanki";
+                                }
+                                if (field.Value.ToString().Contains("Anandan"))
+                                {
+                                    field.Value = "anandan.mariappan";
+                                }
+                                if (field.Value.ToString().Contains("Uvanachandran"))
+                                {
+                                    field.Value = "s.uvanchandran";
+                                }
+                                if (field.Value.ToString().Contains("Pooja"))
+                                {
+                                    field.Value = "Pooja Goel";
+                                }
+                                if (field.Value.ToString().Contains("Pravin"))
+                                {
+                                    field.Value = "Archana Ganesh";
+                                }
+                                UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, field.Value.ToString(), MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
+                                workItem.Fields[field.Name].Value = UserID.UniqueName;
+                            }                           
+
+
+                        }
+                      
                     }
 
                     if (newWorkItem.Fields.Contains(field.Name) && newWorkItem.Fields[field.Name].IsEditable)

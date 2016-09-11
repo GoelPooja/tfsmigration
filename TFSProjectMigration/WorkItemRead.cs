@@ -34,8 +34,8 @@ namespace TFSProjectMigration
             WorkItemCollection workItemCollection = store.Query(" SELECT * " +
                                                                  " FROM WorkItems " +
                                                                  " WHERE [System.TeamProject] = '" + project +
-                                                                 "' AND [System.State] <> 'Closed' ORDER BY [System.Id]");
-            SaveAttachments(workItemCollection);
+                                                                 "' AND [System.WorkItemType] = 'Test Case' AND [System.State] <> 'Closed'  ORDER BY [System.Id]");
+            //SaveAttachments(workItemCollection);
             return workItemCollection;
         }
 
@@ -48,7 +48,7 @@ namespace TFSProjectMigration
                 query = String.Format(" SELECT * " +
                                                     " FROM WorkItems " +
                                                     " WHERE [System.TeamProject] = '" + project +
-                                                    "' AND [System.State] <> 'Closed' AND [System.State] <> 'Removed' ORDER BY [System.Id]");
+                                                    "' AND [System.AreaPath] = 'ApraAmcos\\DevOps' AND [System.State] <> 'Closed' AND [System.State] <> 'Removed' ORDER BY [System.Id]");
             }
 
             else if (IsNotIncludeRemoved)
@@ -56,21 +56,21 @@ namespace TFSProjectMigration
                 query = String.Format(" SELECT * " +
                                                    " FROM WorkItems " +
                                                    " WHERE [System.TeamProject] = '" + project +
-                                                   "' AND [System.State] <> 'Removed' ORDER BY [System.Id]");
+                                                   "' AND [System.WorkItemType] = 'Test Case' AND [System.State] <> 'Removed' ORDER BY [System.Id]");
             }
             else if (IsNotIncludeClosed)
             {
                 query = String.Format(" SELECT * " +
                                                    " FROM WorkItems " +
                                                    " WHERE [System.TeamProject] = '" + project +
-                                                   "' AND [System.State] <> 'Closed'  ORDER BY [System.Id]");
+                                                   "' AND [System.WorkItemType] = 'Test Case' AND [System.State] <> 'Closed'  ORDER BY [System.Id]");
             }
             else
             {
                 query = String.Format(" SELECT * " +
                                                    " FROM WorkItems " +
                                                    " WHERE [System.TeamProject] = '" + project +
-                                                   "' ORDER BY [System.Id]");
+                                                   "' AND [System.WorkItemType] = 'Test Case' ORDER BY [System.Id]");
             }
             System.Diagnostics.Debug.WriteLine(query);
             WorkItemCollection workItemCollection = store.Query(query);
@@ -110,11 +110,11 @@ namespace TFSProjectMigration
                             {
                                 webClient.DownloadFile(att.Uri, path + "\\" + att.Name);
                             }
-                            else 
+                            else
                             {
                                 webClient.DownloadFile(att.Uri, path + "\\" + att.Id + "_" + att.Name);
                             }
-                           
+
                         }
                         catch (Exception)
                         {

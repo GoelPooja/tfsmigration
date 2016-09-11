@@ -185,7 +185,7 @@ namespace TFSProjectMigration
             {
                 StatusViwer.Content = StatusViwer.Content + "\nCopying Team Queries...";
             }));
-            writeTarget.SetTeamQueries(readSource.queryCol, sourceProject.Name); //Copy Queries
+            //writeTarget.SetTeamQueries(readSource.queryCol, sourceProject.Name); //Copy Queries
 
             StatusViwer.Dispatcher.BeginInvoke(new Action(delegate()
             {
@@ -197,8 +197,8 @@ namespace TFSProjectMigration
             {
                 StatusViwer.Content = StatusViwer.Content + "\nCopying Test Plans...";
             }));
-            TestPlanMigration tcm = new TestPlanMigration(sourceTFS, destinationTFS, sourceProject.Name, destinationProject.Name, writeTarget.itemMap, StatusBar);
-            tcm.CopyTestPlans(); //Copy Test Plans
+            //TestPlanMigration tcm = new TestPlanMigration(sourceTFS, destinationTFS, sourceProject.Name, destinationProject.Name, finalFieldMap, StatusBar);
+            //tcm.CopyTestPlans(); //Copy Test Plans
 
             MigratingLabel.Dispatcher.BeginInvoke(new Action(delegate()
             {

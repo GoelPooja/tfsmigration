@@ -13,4 +13,11 @@ namespace TFSProjectMigration
         TestSuite,
         TeamProject
     }
+
+    public enum WIT
+    {
+        TestCase,
+        TestPlan,
+        TestSuite
+    }
 }
