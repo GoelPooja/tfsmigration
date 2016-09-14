@@ -50,7 +50,7 @@ namespace TFSProjectMigration
             WorkItemCollection workItemCollection = store.Query(" SELECT * " +
                                                                   " FROM WorkItems " +
                                                                   " WHERE [System.TeamProject] = '" + projectName +
-                                                                  "' AND [System.AreaPath] = 'Clef\\DevOps' ORDER BY [System.Id]");
+                                                                  "' AND ([System.WorkItemType] = 'Risk' OR [System.WorkItemType] = 'Dependency' OR [System.WorkItemType] = 'Issue') AND [System.State] <> 'Closed' AND [System.State] <> 'Resolved' AND [System.State] <> 'Cancelled' ORDER BY [System.Id]");
             return workItemCollection;
         }
 
@@ -65,7 +65,23 @@ namespace TFSProjectMigration
 
             //try to change the status directly
             newWorkItem.Open();
-            newWorkItem.Fields["State"].Value = oldWorkItem.Fields["State"].Value;
+            switch (oldWorkItem.Fields["State"].Value.ToString())
+            {
+                case "Active":
+                    newWorkItem.Fields["State"].Value = "Open";
+                    break;
+                case "Raised":
+                    newWorkItem.Fields["State"].Value = "Requested";
+                    break;
+                case "Proposed":
+                    newWorkItem.Fields["State"].Value = "Requested";
+                    break;
+                case "In Review":
+                    newWorkItem.Fields["State"].Value = "Open";
+                    break;
+
+            }
+            //newWorkItem.Fields["State"].Value = oldWorkItem.Fields["State"].Value;
             //System.Diagnostics.Debug.WriteLine(newWorkItem.Type.Name + "      " + newWorkItem.Fields["State"].Value);
 
             //if status can't be changed directly... 
@@ -107,7 +123,19 @@ namespace TFSProjectMigration
             else
             {
                 // Just save it off if we can.
-                bool success = ChangeWorkItemStatus(newWorkItem, originalState, sourceState);
+                try
+                {
+                    newWorkItem.Save();
+                }
+                catch (Exception)
+                {
+                    logger.WarnFormat("Failed to save state for workItem: {0}  type:'{1}' state from '{2}' to '{3}' => rolling workItem status to original state '{4}'",
+                        newWorkItem.Id, newWorkItem.Type.Name, sourceState, newWorkItem.Fields["State"].Value, sourceState);
+                    //Revert back to the original value.
+                    newWorkItem.Fields["State"].Value = newWorkItem;
+                    
+                }
+
             }
         }
 
@@ -176,11 +204,21 @@ namespace TFSProjectMigration
                 {
                     newWorkItem = new WorkItem(workItemTypes[workItem.Type.Name]);
                 }
-                else
-                {
-                    logger.InfoFormat("Work Item Type {0} does not exist in target TFS", workItem.Type.Name);
-                    continue;
-                }
+                else switch (workItem.Type.Name)
+                    {
+                        case "Issue":
+                            newWorkItem = new WorkItem(workItemTypes["Impediment"]);
+                            break;
+                        case "Risk":
+                            newWorkItem = new WorkItem(workItemTypes["Impediment"]);
+                            break;
+                        case "Dependency":
+                            newWorkItem = new WorkItem(workItemTypes["Impediment"]);
+                            break;
+                        default:
+                            continue;
+                    }
+                newWorkItem.Fields["Impediment Type"].Value = workItem.Type.Name;
 
                 /* assign relevent fields*/
                 foreach (Field field in workItem.Fields)
@@ -190,38 +228,79 @@ namespace TFSProjectMigration
                         continue;
                     }
 
-                    if (field.Name == "Assigned To" || field.Name == "Activated By")
+                    if (field.Name == "Assigned To")
                     {
                         workItem.Open();
                         if (!String.IsNullOrEmpty(field.Value.ToString()))
                         {
-                            if (field.Value.ToString().Equals("Adam Coulter"))
+                            if (field.Value.ToString().ToLower().Equals("adam coulter"))
                             {
                                 workItem.Fields[field.Name].Value = "adam.coulter@accenture.com";
                             }                           
                             else
                             {
-                                if (field.Value.ToString().Contains("Hitendra"))
+                                if (field.Value.ToString().ToLower().Contains("rockliff"))
                                 {
-                                    field.Value = "hitendra.solanki";
+                                    field.Value = "g.russell-rockliff";
                                 }
-                                if (field.Value.ToString().Contains("Anandan"))
+                                if (field.Value.ToString().ToLower().Contains("jacobs"))
                                 {
-                                    field.Value = "anandan.mariappan";
+                                    field.Value = "Kirti Jacobs";
                                 }
-                                if (field.Value.ToString().Contains("Uvanachandran"))
+                                if (field.Value.ToString().ToLower().Contains("fackrell"))
                                 {
-                                    field.Value = "s.uvanchandran";
+                                    field.Value = "Matthew Fackrell";
                                 }
-                                if (field.Value.ToString().Contains("Pooja"))
+                                if (field.Value.ToString().ToLower().Contains("howland"))
                                 {
-                                    field.Value = "Pooja Goel";
+                                    field.Value = "Sally Howland";
                                 }
-                                if (field.Value.ToString().Contains("Pravin"))
+                                if (field.Value.ToString().ToLower().Contains("antchik"))
                                 {
-                                    field.Value = "Archana Ganesh";
+                                    field.Value = "Roman Antchik";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("clarke"))
+                                {
+                                    field.Value = "Pete Clarke";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("franklin"))
+                                {
+                                    field.Value = "Mandy Franklin";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("kaine"))
+                                {
+                                    field.Value = "Matt Kaine";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("sharif"))
+                                {
+                                    field.Value = "Hasan.Sharif";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("flos"))
+                                {
+                                    field.Value = "Furuzan Los";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("swamy"))
+                                {
+                                    field.Value = "Girish Swamy";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("thangaraja"))
+                                {
+                                    field.Value = "Ram Thangaraja";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("cresswell"))
+                                {
+                                    field.Value = "Jarod Cresswell";
+                                }
+                                else
+                                {
+                                    //field.Value = "Pooja Goel";
                                 }
                                 UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, field.Value.ToString(), MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
+                                if (UserID == null)
+                                {
+                                    field.Value = "Pooja Goel";
+                                    UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, field.Value.ToString(), MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
+                                }
                                 workItem.Fields[field.Name].Value = UserID.UniqueName;
                             }                           
 
@@ -229,10 +308,106 @@ namespace TFSProjectMigration
                         }
                       
                     }
+                    if ((workItem.Type.Name != "Issue" && field.Name == "Raised By") || (workItem.Type.Name == "Issue" && field.Name == "Created By"))
+                    {
+                        workItem.Open();
+                        if (!String.IsNullOrEmpty(field.Value.ToString()))
+                        {
+                            if (field.Value.ToString().Equals("adam coulter"))
+                            {
+                                workItem.Fields[field.Name].Value = "adam.coulter@accenture.com";
+                            }
+                            else
+                            {
+                                if (field.Value.ToString().ToLower().Contains("rockliff"))
+                                {
+                                    field.Value = "g.russell-rockliff";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("jacobs"))
+                                {
+                                    field.Value = "Kirti Jacobs";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("fackrell"))
+                                {
+                                    field.Value = "Matthew Fackrell";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("howland"))
+                                {
+                                    field.Value = "Sally Howland";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("antchik"))
+                                {
+                                    field.Value = "Roman Antchik";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("clarke"))
+                                {
+                                    field.Value = "Pete Clarke";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("franklin"))
+                                {
+                                    field.Value = "Mandy Franklin";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("kaine"))
+                                {
+                                    field.Value = "Matt Kaine";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("sharif"))
+                                {
+                                    field.Value = "Hasan.Sharif";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("flos"))
+                                {
+                                    field.Value = "Furuzan Los";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("nazir"))
+                                {
+                                    field.Value = "Shirin Nazir";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("wai"))
+                                {
+                                    field.Value = "Michelle Wai";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("zakiullah"))
+                                {
+                                    field.Value = "Ammar Zakiullah";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("swamy"))
+                                {
+                                    field.Value = "Girish Swamy";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("thangaraja"))
+                                {
+                                    field.Value = "Ram Thangaraja";
+                                }
+                                if (field.Value.ToString().ToLower().Contains("cresswell"))
+                                {
+                                    field.Value = "Jarod Cresswell";
+                                }
+                                else
+                                {
+                                    //field.Value = "Pooja Goel";
+                                }
+                                UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, field.Value.ToString(), MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
+                                if (UserID == null)
+                                {
+                                    field.Value = "Pooja Goel";
+                                    UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, field.Value.ToString(), MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
+                                }
+                                newWorkItem.Fields["Raised By"].Value = UserID.UniqueName;
+                            }
+
+
+                        }
+
+                    }
 
                     if (newWorkItem.Fields.Contains(field.Name) && newWorkItem.Fields[field.Name].IsEditable)
                     {
-                        newWorkItem.Fields[field.Name].Value = field.Value;
+                        
+                       
+                            newWorkItem.Fields[field.Name].Value = field.Value;
+                        
+                        
                         if (field.Name == "Iteration Path" || field.Name == "Area Path" || field.Name == "Node Name" || field.Name == "Team Project")
                         {
                             try
@@ -246,11 +421,31 @@ namespace TFSProjectMigration
                             {
                             }
                         }
+                        if (workItem.Type.Name == "Risk" && field.Name == "Description")
+                        {
+                            try
+                            {
+                                newWorkItem.Fields["Description"].Value = newWorkItem.Fields["Description"].Value + System.Environment.NewLine + "Impact: " + workItem.Fields["Severity"].Value;
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
                     }
+                    //if ((workItem.Type.Name == "Risk" && field.Name == "Severity"))
+                    //{
+                    //    newWorkItem.Fields["Description"].Value = newWorkItem.Fields["Description"].Value + System.Environment.NewLine + "Impact: " + workItem.Fields["Severity"].Value;
+                    //}
                     //Add values to mapped fields
                     else if (fieldMap.ContainsKey(field.Name))
                     {
+                        var k = (string)fieldMap[field.Name];
                         newWorkItem.Fields[(string)fieldMap[field.Name]].Value = field.Value;
+                        var k1 = newWorkItem.Fields[(string)fieldMap[field.Name]].Value;
+                        if (k.Equals("Due Date") && k1 == null)
+                        {
+                            newWorkItem.Fields[(string)fieldMap[field.Name]].Value = DateTime.Now.ToString();
+                        }
                     }
                 }
 
@@ -258,7 +453,17 @@ namespace TFSProjectMigration
                 ArrayList array = newWorkItem.Validate();
                 foreach (Field item in array)
                 {
+
+                    if (item.Name.Equals("Due Date"))
+                    {
+                        newWorkItem.Fields[item.Name].Value = DateTime.Now.ToString();
+                        array.Remove(item);
+                        break;
+                    }
+                    else
+                    {
                         logger.Info(String.Format("Work item {0} Validation Error in field: {1}  : {2}", workItem.Id, item.Name, newWorkItem.Fields[item.Name].Value));
+                    }
                 }
                 //if work item is valid
                 if (array.Count == 0)
@@ -819,7 +1024,7 @@ namespace TFSProjectMigration
                     else
                     {
                         QueryDefinition oldDef = (QueryDefinition)subQuery;
-                        string queryText = oldDef.QueryText.Replace(sourceProjectName, projectName).Replace("User Story", "Product Backlog Item").Replace("Issue", "Impediment");
+                        string queryText = oldDef.QueryText.Replace(sourceProjectName, projectName).Replace("Risk", "Impediment").Replace("Issue", "Impediment").Replace("Dependency", "Impediment");
 
                         newItem = new QueryDefinition(subQuery.Name, queryText);
                         if (!parentFolder.Contains(subQuery.Name))
@@ -857,17 +1062,9 @@ namespace TFSProjectMigration
                 List<string> targetList = new List<string>();
 
                 WorkItemType workItemTypeTarget = null;
-                if (workItemTypes.Contains(workItemTypeSource.Name))
+                if (workItemTypeSource.Name == "Risk" || workItemTypeSource.Name == "Dependency" || workItemTypeSource.Name == "Issue")
                 {
-                    workItemTypeTarget = workItemTypes[workItemTypeSource.Name];
-                }
-                else if (workItemTypeSource.Name == "User Story")
-                {
-                     workItemTypeTarget = workItemTypes["Product Backlog Item"];
-                }
-                else if (workItemTypeSource.Name == "Issue")
-                {
-                    workItemTypeTarget = workItemTypes["Impediment"];
+                     workItemTypeTarget = workItemTypes["Impediment"];
                 }
                 else
                 {
@@ -905,7 +1102,7 @@ namespace TFSProjectMigration
                     }
                 }
                 fieldList.Add(targetList);
-                fieldMap.Add(workItemTypeTarget.Name, fieldList);
+                fieldMap.Add(workItemTypeSource.Name, fieldList);
             }
             return fieldMap;
         }

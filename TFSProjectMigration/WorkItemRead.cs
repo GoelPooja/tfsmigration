@@ -48,7 +48,7 @@ namespace TFSProjectMigration
                 query = String.Format(" SELECT * " +
                                                     " FROM WorkItems " +
                                                     " WHERE [System.TeamProject] = '" + project +
-                                                    "' AND [System.AreaPath] = 'ApraAmcos\\DevOps' AND [System.State] <> 'Closed' AND [System.State] <> 'Removed' ORDER BY [System.Id]");
+                                                    "' AND ([System.WorkItemType] = 'Risk' OR [System.WorkItemType] = 'Dependency' OR [System.WorkItemType] = 'Issue') AND [System.State] <> 'Closed' AND [System.State] <> 'Resolved' AND [System.State] <> 'Cancelled' ORDER BY [System.Id]");
             }
 
             else if (IsNotIncludeRemoved)
