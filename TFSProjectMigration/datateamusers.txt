@@ -1,0 +1,66 @@
+Tfs|VSTS
+Adam Coulter	 | 	Adam Coulter
+Mark West <APRA\mwest>	 | 	Shirin Nazir
+snazir	 | 	Shirin Nazir
+Shyam Devineni	 | 	s.a.Devineni
+Mark West	 | 	Shirin Nazir
+lchandra	 | 	Shirin Nazir
+kkamel	 | 	khaled kamel
+rkandpal	 | 	Shirin Nazir
+jdiaz	 | 	Jeny Diaz
+Ravi Achhwani	 | 	Ravi Achhwani
+skanagaraj	 | 	siva kanagaraj
+jszymanski	 | 	John Szymanski
+MPadmanabhan	 | 	Shirin Nazir
+Shelvin Pandirikkal	 | 	Shirin Nazir
+MCalokerinos	 | 	Maria Calokerinos
+rpratap	 | 	Shirin Nazir
+iwood	 | 	Ian Wood
+tpannila	 | 	Tara Pannila
+Mary Ann Tabuena	 | 	Mary Ann Tabuena
+RGogoi	 | 	Raja Gogoi
+ejeregui	 | 	Elena Jeregui
+rkasi	 | 	Shirin Nazir
+rmichael	 | 	Robert Michael
+ssaini	 | 	Sundeep Kaur Saini
+Paula Hollander	 | 	Paula.Hollander
+Arun Renganathan	 | 	Arun Renganathan
+Jagan Arumugam	 | 	Jagan Arumugam
+Kyaw Zayya Oo	 | 	Kyaw Zayya Oo
+Geetha Subramanian	 | 	Shirin Nazir
+mkaine	 | 	Matt Kaine
+Kartik Bhatt	 | 	Shirin Nazir
+Roman Antchik	 | 	Roman Antchik
+Winson Choo	 | 	Winson Choo
+Abhijit Chodankar	 | 	Abhijit Chodankar
+Saravana Malaikani	 | 	Saravanan Malaikani
+skumar	 | 	Sathish Kumar Sermadurai
+Kumar Sermadurai, S	 | 	Sathish Kumar Sermadurai
+Saurabh Gupta	 | 	Saurabh Gupta
+Mark West <APRACLOUD\MWest>	 | 	Shirin Nazir
+ppandya	 | 	Shirin Nazir
+Kalairajan Subramani	 | 	Shirin Nazir
+Pooja Goel	 | 	Pooja Goel
+Poornima Santhamoorthy	 | 	Poornima Santhamoorthy
+Irudaya Premkumar	 | 	Prem Vivek
+sbalraj	 | 	Shirin Nazir
+rantchik	 | 	Roman Antchik
+sdevineni	 | 	s.a.devineni
+Amit Kumar Jain	 | 	Shirin Nazir
+Margaret Ping Zou	 | 	Shirin Nazir
+mdey	 | 	Shirin Nazir
+mfranklin	 | 	Mandy Franklin
+kkrishnan	 | 	Kumaresan Krishnan
+drasamalli	 | 	Shirin Nazir
+jramamurthy	 | 	Shirin Nazir
+lchandren	 | 	Shirin Nazir
+nchockalingam	 | 	Shirin Nazir
+pdevanahalli	 | 	Shirin Nazir
+pjangirala	 | 	Shirin Nazir
+pmuralidharan	 | 	Shirin Nazir
+Pradeep Dhondiram Karande	 | 	Shirin Nazir
+smohan	 | 	Shirin Nazir
+spadmanabhan	 | 	Shirin Nazir
+Tarun Prithyani	 | 	Shirin Nazir
+vbapanapalli	 | 	Shirin Nazir
+vgollapudi	 | 	Shirin Nazir

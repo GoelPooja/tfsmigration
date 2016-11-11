@@ -1,0 +1,29 @@
+
+Activated Date
+Activated By
+Resolved Date
+Resolved By
+Resolved Reason
+Closed By
+Triage
+Stack Rank
+Original Estimate
+Discipline
+Task Type
+Requires Review
+Requires Test
+Completed Work
+Start Date
+Finish Date
+Build Status
+Issue Type
+Review By
+Action
+Business Area
+Impact on Conversion
+ImpactedTable
+Widget Type
+External Remediation Action
+Build Team Action
+Rework Required
+Planned QA Start Date

@@ -48,7 +48,7 @@ namespace TFSProjectMigration
                 query = String.Format(" SELECT * " +
                                                     " FROM WorkItems " +
                                                     " WHERE [System.TeamProject] = '" + project +
-                                                    "' AND ([System.WorkItemType] = 'Risk' OR [System.WorkItemType] = 'Dependency' OR [System.WorkItemType] = 'Issue') AND [System.State] <> 'Closed' AND [System.State] <> 'Resolved' AND [System.State] <> 'Cancelled' ORDER BY [System.Id]");
+                                                    "' AND ([System.WorkItemType] = 'Task' OR [System.WorkItemType] = 'Bug') ORDER BY [System.Id]");
             }
 
             else if (IsNotIncludeRemoved)
@@ -74,7 +74,7 @@ namespace TFSProjectMigration
             }
             System.Diagnostics.Debug.WriteLine(query);
             WorkItemCollection workItemCollection = store.Query(query);
-            SaveAttachments(workItemCollection);
+            //SaveAttachments(workItemCollection);
             return workItemCollection;
         }
         /* Save existing attachments of workitems to local folders of workitem ID */
