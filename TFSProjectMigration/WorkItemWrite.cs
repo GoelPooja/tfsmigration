@@ -202,170 +202,172 @@ namespace TFSProjectMigration
                 }
 
                 WorkItem newWorkItem = null;
+                newWorkItem = new WorkItem(workItemTypes["Bug"]);
                 Hashtable fieldMap = ListToTable((List<object>)fieldMapAll[workItem.Type.Name]);
-                switch (workItem.Type.Name)
+                WorkItemLinkCollection links = workItem.WorkItemLinks;
+                foreach (WorkItemLink link in links)
                 {
-                    case "Task":
-                        newWorkItem = new WorkItem(workItemTypes["Migration Item"]);
-                        break;
-                    case "Bug":
-                        newWorkItem = new WorkItem(workItemTypes["Bug"]);
-                        break;
-                    default:
-                        continue;
-                }
-                //newWorkItem.Fields["Impediment Type"].Value = workItem.Type.Name;
-
-                /* assign relevent fields*/
-                foreach (Field field in workItem.Fields)
-                {
-                    if (field.Name.Contains("ID") || field.Name.Contains("State") || field.Name.Contains("Reason"))
+                    WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
+                    if (targetItem.Type.Name == "Bug" && targetItem.AreaPath == "CLEF")
                     {
-                        continue;
-                    }
-
-                    if (field.Name == "Assigned To" || field.Name == "Created By" || field.Name == "Activated By" || field.Name == "Closed By")
-                    {
-                        workItem.Open();
-                        if (!String.IsNullOrEmpty(field.Value.ToString()))
+                        foreach (Field field in targetItem.Fields)
                         {
-                            string user = String.Empty;
-                            if (userMap.ContainsKey(field.Value))
+                            if (field.Name.Contains("ID") || field.Name.Contains("State") || field.Name.Contains("Reason"))
                             {
-                                user = userMap[field.Value].ToString();
+                                continue;
                             }
-                            else
+
+                            if (field.Name == "Assigned To" || field.Name == "Created By" || field.Name == "Activated By" || field.Name == "Closed By")
                             {
-                                user = userMap["snazir"].ToString();
-                            }
-                            
-                            if (user.ToLower().Equals("adam coulter"))
-                            {
-                                workItem.Fields[field.Name].Value = "Pooja Goel";
-                            }
-                            else
-                            {
-                                UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, user, MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
-                                if (UserID == null)
+                                targetItem.Open();
+                                if (!String.IsNullOrEmpty(field.Value.ToString()))
                                 {
-                                    workItem.Fields[field.Name].Value = "";
-                                    field.Value = "Pooja Goel";
-                                    UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, field.Value.ToString(), MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
-                                    workItem.Fields[field.Name].Value = "Pooja Goel";
-                                }
-                                else
-                                {
-                                    if (field.Name == "Created By")
+                                    string user = String.Empty;
+                                    if (userMap.ContainsKey(field.Value))
                                     {
-                                        workItem.Fields[field.Name].Value = UserID.DisplayName;
-                                        newWorkItem.Fields["Raised By"].Value = UserID.DisplayName;
+                                        user = userMap[field.Value].ToString();
                                     }
                                     else
                                     {
-                                        workItem.Fields[field.Name].Value = UserID.DisplayName;
-                                    }                                    
+                                        user = userMap["snazir"].ToString();
+                                    }
+
+                                    if (user.ToLower().Equals("adam coulter"))
+                                    {
+                                        targetItem.Fields[field.Name].Value = "Pooja Goel";
+                                    }
+                                    else
+                                    {
+                                        UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, user, MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
+                                        if (UserID == null)
+                                        {
+                                            targetItem.Fields[field.Name].Value = "";
+                                            field.Value = "siva kanagaraj";
+                                            UserID = ims.ReadIdentity(IdentitySearchFactor.DisplayName, field.Value.ToString(), MembershipQuery.Direct, ReadIdentityOptions.IncludeReadFromSource);
+                                            targetItem.Fields[field.Name].Value = "siva kanagaraj";
+                                        }
+                                        else
+                                        {
+                                            if (field.Name == "Created By")
+                                            {
+                                                targetItem.Fields[field.Name].Value = UserID.DisplayName;
+                                                newWorkItem.Fields["Raised By"].Value = UserID.DisplayName;
+                                            }
+                                            else
+                                            {
+                                                targetItem.Fields[field.Name].Value = UserID.DisplayName;
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }                      
-                    
 
-                    if (newWorkItem.Fields.Contains(field.Name) && newWorkItem.Fields[field.Name].IsEditable)
-                    {
-                        
-                       
-                            newWorkItem.Fields[field.Name].Value = field.Value;
-                        
-                        
-                        if (field.Name == "Iteration Path" || field.Name == "Area Path" || field.Name == "Node Name" || field.Name == "Team Project")
-                        {
-                            try
+
+                            if (newWorkItem.Fields.Contains(field.Name)  )
+                                if (newWorkItem.Fields[field.Name].IsEditable)
                             {
-                                string itPath = (string)field.Value;
-                                int length = sourceProjectName.Length;
-                                string itPathNew = destinationProject.Name + itPath.Substring(length);
-                                newWorkItem.Fields[field.Name].Value = itPathNew;
-                            }
-                            catch (Exception)
-                            {
-                            }
-                        }
-                        if (field.Name == "Discipline")
-                        {
-                            try
-                            {
-                                if (field.Value.ToString().Contains("-"))
+
+
+                                newWorkItem.Fields[field.Name].Value = field.Value;
+
+
+                                if (field.Name == "Iteration Path" || field.Name == "Area Path" || field.Name == "Node Name" || field.Name == "Team Project")
                                 {
-                                    workItem.Open();
-                                    field.Value = field.Value.ToString().Replace('-', ' ');
-                                    newWorkItem.Fields[field.Name].Value = field.Value;
+                                    try
+                                    {
+                                        //string itPath = (string)field.Value;
+                                        //int length = sourceProjectName.Length;
+                                        //string itPathNew = destinationProject.Name + itPath.Substring(length);
+                                        newWorkItem.Fields[field.Name].Value = destinationProject.Name;
+                                    }
+                                    catch (Exception)
+                                    {
+                                    }
                                 }
-                                
+                                //if (field.Name == "Discipline")
+                                //{
+                                //    try
+                                //    {
+                                //        if (field.Value.ToString().Contains("-"))
+                                //        {
+                                //            targetItem.Open();
+                                //            field.Value = field.Value.ToString().Replace('-', ' ');
+                                //            newWorkItem.Fields[field.Name].Value = field.Value;
+                                //        }
+
+                                //    }
+                                //    catch (Exception ex)
+                                //    {
+                                //    }
+                                //}
+
                             }
-                            catch (Exception ex)
+                            //if ((workItem.Type.Name == "Risk" && field.Name == "Severity"))
+                            //{
+                            //    newWorkItem.Fields["Description"].Value = newWorkItem.Fields["Description"].Value + System.Environment.NewLine + "Impact: " + workItem.Fields["Severity"].Value;
+                            //}
+                            //Add values to mapped fields
+                            else if (fieldMap.ContainsKey(field.Name))
                             {
+                                var k = (string)fieldMap[field.Name];
+                                newWorkItem.Fields[(string)fieldMap[field.Name]].Value = field.Value;
+                                var k1 = newWorkItem.Fields[(string)fieldMap[field.Name]].Value;
+                                if (k.Equals("Due Date") && k1 == null)
+                                {
+                                    newWorkItem.Fields[(string)fieldMap[field.Name]].Value = DateTime.Now.ToString();
+                                }
                             }
                         }
 
-                    }
-                    //if ((workItem.Type.Name == "Risk" && field.Name == "Severity"))
-                    //{
-                    //    newWorkItem.Fields["Description"].Value = newWorkItem.Fields["Description"].Value + System.Environment.NewLine + "Impact: " + workItem.Fields["Severity"].Value;
-                    //}
-                    //Add values to mapped fields
-                    else if (fieldMap.ContainsKey(field.Name))
-                    {
-                        var k = (string)fieldMap[field.Name];
-                        newWorkItem.Fields[(string)fieldMap[field.Name]].Value = field.Value;
-                        var k1 = newWorkItem.Fields[(string)fieldMap[field.Name]].Value;
-                        if (k.Equals("Due Date") && k1 == null)
+                        /* Validate Item Before Save*/
+                        ArrayList array = newWorkItem.Validate();
+                        foreach (Field item in array)
                         {
-                            newWorkItem.Fields[(string)fieldMap[field.Name]].Value = DateTime.Now.ToString();
+
+                            if (item.Name.Equals("Due Date"))
+                            {
+                                newWorkItem.Fields[item.Name].Value = DateTime.Now.ToString();
+                                array.Remove(item);
+                                break;
+                            }
+                            else
+                            {
+                                logger.Info(String.Format("Work item {0} Validation Error in field: {1}  : {2}", workItem.Id, item.Name, newWorkItem.Fields[item.Name].Value));
+                            }
                         }
-                    }
-                }
+                        //if work item is valid
+                        if (array.Count == 0)
+                        {
+                            //UploadAttachments(newWorkItem, workItem);
+                            newWorkItem.Save();
+                            itemMap.Add(workItem.Id, newWorkItem.Id);
+                            newItems.Add(workItem);
+                            //update workitem status
+                            updateToLatestStatus(workItem, newWorkItem);
+                        }
+                        else
+                        {
+                            logger.ErrorFormat("Work item {0} could not be saved", workItem.Id);
+                        }
 
-                /* Validate Item Before Save*/
-                ArrayList array = newWorkItem.Validate();
-                foreach (Field item in array)
-                {
-
-                    if (item.Name.Equals("Due Date"))
-                    {
-                        newWorkItem.Fields[item.Name].Value = DateTime.Now.ToString();
-                        array.Remove(item);
-                        break;
+                        ProgressBar.Dispatcher.BeginInvoke(new Action(delegate ()
+                        {
+                            float progress = (float)i / (float)workItemCollection.Count;
+                            ProgressBar.Value = ((float)i / (float)workItemCollection.Count) * 100;
+                        }));
+                        i++;
                     }
-                    else
-                    {
-                        logger.Info(String.Format("Work item {0} Validation Error in field: {1}  : {2}", workItem.Id, item.Name, newWorkItem.Fields[item.Name].Value));
-                    }
-                }
-                //if work item is valid
-                if (array.Count == 0)
-                {
-                    //UploadAttachments(newWorkItem, workItem);
-                    newWorkItem.Save();
-                    itemMap.Add(workItem.Id, newWorkItem.Id);
-                    newItems.Add(workItem);
-                    //update workitem status
-                    updateToLatestStatus(workItem, newWorkItem);
-                }
-                else
-                {
-                    logger.ErrorFormat("Work item {0} could not be saved", workItem.Id);
-                }
 
-                ProgressBar.Dispatcher.BeginInvoke(new Action(delegate()
-                {
-                    float progress = (float)i / (float)workItemCollection.Count;
-                    ProgressBar.Value = ((float)i / (float)workItemCollection.Count) * 100;
-                }));
-                i++;
-            }
+                }
+                }
+                
+                //newWorkItem.Fields["Impediment Type"].Value = workItem.Type.Name;
+
+                /* assign relevent fields*/
+           
 
             WriteMaptoFile(sourceProjectName);
-            CreateLinks(newItems, sourceStore);
+            //CreateLinks(newItems, sourceStore);
         }
 
         private Hashtable ListToTable(List<object> map)
@@ -712,18 +714,7 @@ namespace TFSProjectMigration
             foreach (WorkItemType workItemTypeSource in workItemTypesSource)
             {
                 WorkItemType workItemTypeTarget = null;
-                if (workItemTypeSource.Name == "Task")
-                {
-                    workItemTypeTarget = workItemTypes["Migration Item"];
-                }
-                else if (workItemTypeSource.Name == "Bug")
-                {
-                    workItemTypeTarget = workItemTypes["Bug"];
-                }
-                else
-                {
-                    workItemTypeTarget = workItemTypes[workItemTypeSource.Name];
-                }
+                workItemTypeTarget = workItemTypes["Bug"];
 
                 XmlDocument workItemTypeXmlSource = workItemTypeSource.Export(false);
                 XmlDocument workItemTypeXmlTarget = workItemTypeTarget.Export(false);
@@ -741,7 +732,6 @@ namespace TFSProjectMigration
                 }
 
             }
-
         }
 
         /* Add field definitions from Source xml to target xml */
@@ -963,14 +953,15 @@ namespace TFSProjectMigration
                 List<string> targetList = new List<string>();
 
                 WorkItemType workItemTypeTarget = null;
-                if (workItemTypeSource.Name == "Task")
-                {
-                     workItemTypeTarget = workItemTypes["Migration Item"];
-                }
-                else
-                {
-                    continue;
-                }
+                workItemTypeTarget = workItemTypes["Bug"];
+                //if (workItemTypeSource.Name == "Task")
+                //{
+                //     workItemTypeTarget = workItemTypes["Migration Item"];
+                //}
+                //else
+                //{
+                //    continue;
+                //}
 
                 XmlDocument workItemTypeXmlSource = workItemTypeSource.Export(false);
                 XmlDocument workItemTypeXmlTarget = workItemTypeTarget.Export(false);
@@ -1007,6 +998,8 @@ namespace TFSProjectMigration
             }
             return fieldMap;
         }
+
+      
 
 
     }
