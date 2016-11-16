@@ -255,10 +255,17 @@ namespace TFSProjectMigration
                                 }
                                 else
                                 {
-                                    workItem.Fields[field.Name].Value = UserID.DisplayName;
+                                    if (field.Name == "Created By")
+                                    {
+                                        workItem.Fields[field.Name].Value = UserID.DisplayName;
+                                        newWorkItem.Fields["Raised By"].Value = UserID.DisplayName;
+                                    }
+                                    else
+                                    {
+                                        workItem.Fields[field.Name].Value = UserID.DisplayName;
+                                    }                                    
                                 }
                             }
-
                         }
                     }                      
                     
@@ -404,7 +411,7 @@ namespace TFSProjectMigration
 
         private void ReadUserMap()
         {
-            string filaPath = String.Format(@"C:\Migration\New folder\TotalTfsMigrationTool\TFSProjectMigration\UsersMap.txt");
+            string filaPath = String.Format(@"C:\Migration\TFSMigration\TotalTfsMigrationTool\TFSProjectMigration\datateamusers.txt");
             userMap = new Hashtable();
             string line;
             if (File.Exists(filaPath))
