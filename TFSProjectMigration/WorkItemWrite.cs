@@ -69,17 +69,23 @@ namespace TFSProjectMigration
             newWorkItem.Open();
             switch (oldWorkItem.Fields["State"].Value.ToString())
             {
-                case "Active":
-                    newWorkItem.Fields["State"].Value = "Open";
+                case "Assigned":
+                    newWorkItem.Fields["State"].Value = "Committed";
                     break;
-                case "Raised":
-                    newWorkItem.Fields["State"].Value = "Requested";
+                case "Deferred":
+                    newWorkItem.Fields["State"].Value = "Removed";
                     break;
-                case "Proposed":
-                    newWorkItem.Fields["State"].Value = "Requested";
+                case "OnHold":
+                    newWorkItem.Fields["State"].Value = "Approved";
                     break;
-                case "In Review":
-                    newWorkItem.Fields["State"].Value = "Open";
+                case "Resolved":
+                    newWorkItem.Fields["State"].Value = "Done";
+                    break;
+                case "Triage":
+                    newWorkItem.Fields["State"].Value = "New";
+                    break;
+                case "New":
+                    newWorkItem.Fields["State"].Value = "New";
                     break;
 
             }
@@ -135,7 +141,7 @@ namespace TFSProjectMigration
                         newWorkItem.Id, newWorkItem.Type.Name, sourceState, newWorkItem.Fields["State"].Value, sourceState);
                     //Revert back to the original value.
                     newWorkItem.Fields["State"].Value = newWorkItem;
-                    
+
                 }
 
             }
@@ -170,7 +176,7 @@ namespace TFSProjectMigration
                 workItem.Open();
                 workItem.Fields["State"].Value = destState;
                 workItem.Fields["Reason"].Value = reason;
- 
+
                 ArrayList list = workItem.Validate();
                 workItem.Save();
 
@@ -190,6 +196,7 @@ namespace TFSProjectMigration
         /* Copy work items to project from work item collection */
         public void writeWorkItems(WorkItemStore sourceStore, WorkItemCollection workItemCollection, string sourceProjectName, ProgressBar ProgressBar, Hashtable fieldMapAll)
         {
+           
             ReadItemMap(sourceProjectName);
             ReadUserMap();
             int i = 1;
@@ -205,6 +212,7 @@ namespace TFSProjectMigration
                 newWorkItem = new WorkItem(workItemTypes["Bug"]);
                 Hashtable fieldMap = ListToTable((List<object>)fieldMapAll[workItem.Type.Name]);
                 WorkItemLinkCollection links = workItem.WorkItemLinks;
+                string consolidatedHistoryComment = "";
                 foreach (WorkItemLink link in links)
                 {
                     WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
@@ -263,61 +271,47 @@ namespace TFSProjectMigration
                             }
 
 
-                            if (newWorkItem.Fields.Contains(field.Name)  )
+                            if (newWorkItem.Fields.Contains(field.Name))
                                 if (newWorkItem.Fields[field.Name].IsEditable)
-                            {
-
-
-                                newWorkItem.Fields[field.Name].Value = field.Value;
-
-
-                                if (field.Name == "Iteration Path" || field.Name == "Area Path" || field.Name == "Node Name" || field.Name == "Team Project")
                                 {
-                                    try
+                                    newWorkItem.Fields[field.Name].Value = field.Value;
+                                    if (field.Name == "Iteration Path" || field.Name == "Area Path" || field.Name == "Node Name" || field.Name == "Team Project")
                                     {
-                                        //string itPath = (string)field.Value;
-                                        //int length = sourceProjectName.Length;
-                                        //string itPathNew = destinationProject.Name + itPath.Substring(length);
-                                        newWorkItem.Fields[field.Name].Value = destinationProject.Name;
+                                        try
+                                        {
+                                            newWorkItem.Fields[field.Name].Value = destinationProject.Name;
+                                        }
+                                        catch (Exception)
+                                        {
+                                        }
                                     }
-                                    catch (Exception)
+                                    
+                                }
+                                else if (fieldMap.ContainsKey(field.Name))
+                                {
+                                    var k = (string)fieldMap[field.Name];
+                                    newWorkItem.Fields[(string)fieldMap[field.Name]].Value = field.Value;
+                                    var k1 = newWorkItem.Fields[(string)fieldMap[field.Name]].Value;
+                                    if (k.Equals("Due Date") && k1 == null)
                                     {
+                                        newWorkItem.Fields[(string)fieldMap[field.Name]].Value = DateTime.Now.ToString();
                                     }
                                 }
-                                //if (field.Name == "Discipline")
-                                //{
-                                //    try
-                                //    {
-                                //        if (field.Value.ToString().Contains("-"))
-                                //        {
-                                //            targetItem.Open();
-                                //            field.Value = field.Value.ToString().Replace('-', ' ');
-                                //            newWorkItem.Fields[field.Name].Value = field.Value;
-                                //        }
-
-                                //    }
-                                //    catch (Exception ex)
-                                //    {
-                                //    }
-                                //}
-
-                            }
-                            //if ((workItem.Type.Name == "Risk" && field.Name == "Severity"))
-                            //{
-                            //    newWorkItem.Fields["Description"].Value = newWorkItem.Fields["Description"].Value + System.Environment.NewLine + "Impact: " + workItem.Fields["Severity"].Value;
-                            //}
-                            //Add values to mapped fields
-                            else if (fieldMap.ContainsKey(field.Name))
-                            {
-                                var k = (string)fieldMap[field.Name];
-                                newWorkItem.Fields[(string)fieldMap[field.Name]].Value = field.Value;
-                                var k1 = newWorkItem.Fields[(string)fieldMap[field.Name]].Value;
-                                if (k.Equals("Due Date") && k1 == null)
-                                {
-                                    newWorkItem.Fields[(string)fieldMap[field.Name]].Value = DateTime.Now.ToString();
-                                }
-                            }
                         }
+                        foreach (Revision rev in targetItem.Revisions)
+                        {
+                            if (rev.Fields["History"].Value != null )
+                            {
+                                var changedBy = rev.Fields["Changed By"].Value.ToString();
+                                var changedDate = rev.Fields["Changed Date"].Value.ToString();
+                                var history = rev.Fields["History"].Value.ToString();
+                                if (!String.IsNullOrEmpty(history))
+                                consolidatedHistoryComment += string.Format("{0} ({1}):{2}{3}{2}{2}", changedBy, changedDate, "<br/>", history);
+                            }
+
+                        }
+                        newWorkItem.Fields["History"].Value = consolidatedHistoryComment;
+                        newWorkItem.Fields["Repro Steps"].Value += string.Format("{0} {1}:{0}{2}{0}", "<br/>","Parent Item Description", workItem.Description); ;
 
                         /* Validate Item Before Save*/
                         ArrayList array = newWorkItem.Validate();
@@ -340,7 +334,7 @@ namespace TFSProjectMigration
                         {
                             //UploadAttachments(newWorkItem, workItem);
                             newWorkItem.Save();
-                            itemMap.Add(workItem.Id, newWorkItem.Id);
+                            //itemMap.Add(workItem.Id, newWorkItem.Id);
                             newItems.Add(workItem);
                             //update workitem status
                             updateToLatestStatus(workItem, newWorkItem);
@@ -359,16 +353,17 @@ namespace TFSProjectMigration
                     }
 
                 }
-                }
-                
-                //newWorkItem.Fields["Impediment Type"].Value = workItem.Type.Name;
+            }
 
-                /* assign relevent fields*/
-           
+            //newWorkItem.Fields["Impediment Type"].Value = workItem.Type.Name;
+
+            /* assign relevent fields*/
+
 
             WriteMaptoFile(sourceProjectName);
             //CreateLinks(newItems, sourceStore);
-        }
+      
+}
 
         private Hashtable ListToTable(List<object> map)
         {
@@ -953,15 +948,14 @@ namespace TFSProjectMigration
                 List<string> targetList = new List<string>();
 
                 WorkItemType workItemTypeTarget = null;
-                workItemTypeTarget = workItemTypes["Bug"];
-                //if (workItemTypeSource.Name == "Task")
-                //{
-                //     workItemTypeTarget = workItemTypes["Migration Item"];
-                //}
-                //else
-                //{
-                //    continue;
-                //}
+                if (workItemTypeSource.Name == "Bug")
+                {
+                    workItemTypeTarget = workItemTypes["Bug"];
+                }
+                else
+                {
+                    continue;
+                }
 
                 XmlDocument workItemTypeXmlSource = workItemTypeSource.Export(false);
                 XmlDocument workItemTypeXmlTarget = workItemTypeTarget.Export(false);
