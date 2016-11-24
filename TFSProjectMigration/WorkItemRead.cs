@@ -48,7 +48,7 @@ namespace TFSProjectMigration
                 query = String.Format(" SELECT * " +
                                                     " FROM WorkItems " +
                                                     " WHERE [System.TeamProject] = '" + project +
-                                                    "' AND ([System.WorkItemType] = 'Task' AND [System.Title] Contains 'Table Load:') ORDER BY [System.Id]");
+                                                    "' AND ([System.WorkItemType] = 'Task') ORDER BY [System.Id]");
             }
 
             else if (IsNotIncludeRemoved)
