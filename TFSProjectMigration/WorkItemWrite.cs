@@ -69,19 +69,27 @@ namespace TFSProjectMigration
             newWorkItem.Open();
             switch (oldWorkItem.Fields["State"].Value.ToString())
             {
-                case "Active":
-                    newWorkItem.Fields["State"].Value = "Open";
+                case "Assigned":
+                    newWorkItem.Fields["State"].Value = "Committed";
                     break;
-                case "Raised":
-                    newWorkItem.Fields["State"].Value = "Requested";
+                case "Deferred":
+                    newWorkItem.Fields["State"].Value = "Removed";
                     break;
-                case "Proposed":
-                    newWorkItem.Fields["State"].Value = "Requested";
+                case "OnHold":
+                    newWorkItem.Fields["State"].Value = "Approved";
                     break;
-                case "In Review":
-                    newWorkItem.Fields["State"].Value = "Open";
+                case "Resolved":
+                    newWorkItem.Fields["State"].Value = "Done";
                     break;
-
+                case "Triage":
+                    newWorkItem.Fields["State"].Value = "New";
+                    break;
+                case "New":
+                    newWorkItem.Fields["State"].Value = "New";
+                    break;
+                case "Review":
+                    newWorkItem.Fields["State"].Value = "New";
+                    break;
             }
             //newWorkItem.Fields["State"].Value = oldWorkItem.Fields["State"].Value;
             //System.Diagnostics.Debug.WriteLine(newWorkItem.Type.Name + "      " + newWorkItem.Fields["State"].Value);
@@ -309,7 +317,7 @@ namespace TFSProjectMigration
                                 int length = sourceProjectName.Length;
                                 string itPathNew = destinationProject.Name + itPath.Substring(length);
                                 newWorkItem.Fields[field.Name].Value = itPathNew;
-                            }                           
+                            }
                         }
                         catch (Exception)
                         {
@@ -330,8 +338,26 @@ namespace TFSProjectMigration
                         {
                         }
                     }
+                    if (field.Name == "Defect Type")
+                    {
+                        try
+                        {
+                            if (!field.Value.ToString().Equals("Data Migration"))
+                            {
+                                workItem.Open();
+                                newWorkItem.Fields[field.Name].Value = "Data Migration";
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+
+                    }
                 }
-          }
+            }
+
+          
             if (workItem.Type.Name.Equals("Bug"))
             {
                 foreach (Revision rev in workItem.Revisions)
@@ -484,7 +510,7 @@ namespace TFSProjectMigration
                                 {
                                     try
                                     {
-                                        WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds[link.LinkTypeEnd.Name];
+                                        WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds["Related"];
                                         newWorkItem.Links.Add(new RelatedLink(linkTypeEnd, targetWorkItemID));
 
                                         ArrayList array = newWorkItem.Validate();
