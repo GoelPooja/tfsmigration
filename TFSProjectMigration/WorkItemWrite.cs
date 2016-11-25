@@ -91,10 +91,6 @@ namespace TFSProjectMigration
                     newWorkItem.Fields["State"].Value = "New";
                     break;
             }
-            //newWorkItem.Fields["State"].Value = oldWorkItem.Fields["State"].Value;
-            //System.Diagnostics.Debug.WriteLine(newWorkItem.Type.Name + "      " + newWorkItem.Fields["State"].Value);
-
-            //if status can't be changed directly... 
             if (newWorkItem.Fields["State"].Status != FieldStatus.Valid)
             {
                 //get the state transition history of the source work item.
@@ -367,7 +363,7 @@ namespace TFSProjectMigration
                         var changedBy = rev.Fields["Changed By"].Value.ToString();
                         var changedDate = rev.Fields["Changed Date"].Value.ToString();
                         var history = rev.Fields["History"].Value.ToString();
-                        if (!String.IsNullOrEmpty(history))
+                        if (!string.IsNullOrEmpty(history))
                             consolidatedHistoryComment += string.Format("{0} ({1}):{2}{3}{2}{2}", changedBy, changedDate, "<br/>", history);
                     }
                 }
@@ -378,12 +374,15 @@ namespace TFSProjectMigration
                         var changedBy = rev.Fields["Changed By"].Value.ToString();
                         var changedDate = rev.Fields["Changed Date"].Value.ToString();
                         var history = rev.Fields["History"].Value.ToString();
-                        if (!String.IsNullOrEmpty(history))
+                        if (!string.IsNullOrEmpty(history))
                             consolidatedHistoryComment += string.Format("{0} ({1}):{2}{3}{2}{2}", changedBy, changedDate, "<br/>", history);
                     }
                 }
                 newWorkItem.Fields["History"].Value = consolidatedHistoryComment;
-                newWorkItem.Fields["Repro Steps"].Value += string.Format("{0} {1}:{0}{2}{0}", "<br/>", "Parent Item Description", workItem.Description);
+                if (!string.IsNullOrEmpty(workItem.Description))
+                {
+                    newWorkItem.Fields["Repro Steps"].Value += string.Format("{0} {1}:{0}{2}{0}", "<br/>", "Parent Item Description", workItem.Description);
+                }                
             }
 
             /* Validate Item Before Save*/
