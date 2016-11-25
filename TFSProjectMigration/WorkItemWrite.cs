@@ -395,7 +395,7 @@ namespace TFSProjectMigration
             //if work item is valid
             if (array.Count == 0)
             {
-                //UploadAttachments(newWorkItem, workItem);
+                UploadAttachments(newWorkItem, workItem);
                 newWorkItem.Fields["Reference Id"].Value = workItem.Id;
                 newWorkItem.Save();
                 itemMap.Add(workItem.Id, newWorkItem.Id);
