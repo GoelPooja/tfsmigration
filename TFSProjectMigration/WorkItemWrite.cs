@@ -78,17 +78,14 @@ namespace TFSProjectMigration
                 case "OnHold":
                     newWorkItem.Fields["State"].Value = "Approved";
                     break;
-                case "Resolved":
-                    newWorkItem.Fields["State"].Value = "Done";
-                    break;
                 case "Triage":
                     newWorkItem.Fields["State"].Value = "New";
                     break;
-                case "New":
-                    newWorkItem.Fields["State"].Value = "New";
+                case "Closed":
+                    newWorkItem.Fields["State"].Value = "Done";
                     break;
-                case "Review":
-                    newWorkItem.Fields["State"].Value = "New";
+                case "Postponed":
+                    newWorkItem.Fields["State"].Value = "Removed";
                     break;
             }
             if (newWorkItem.Fields["State"].Status != FieldStatus.Valid)
