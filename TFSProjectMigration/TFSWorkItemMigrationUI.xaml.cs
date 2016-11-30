@@ -25,6 +25,7 @@ using System.Xml;
 using log4net.Config;
 using log4net;
 using System.Threading;
+using System.Net;
 
 namespace TFSProjectMigration
 {
@@ -109,12 +110,23 @@ namespace TFSProjectMigration
                 copyingFieldSet = new Hashtable();
                 migrateTypeSet = new List<object>();
 
-                this.destinationTFS = tpp.SelectedTeamProjectCollection;
+
+                NetworkCredential netCred = new NetworkCredential("adam.coulter@accenture.com", "px3iifegtadud3p33ma55vvf2ign7y7j6tdb4hvs43jefuwym6oa");
+                BasicAuthCredential basicCred = new BasicAuthCredential(netCred);
+                TfsClientCredentials tfsCred = new TfsClientCredentials(basicCred);
+                tfsCred.AllowInteractive = false;
+                TfsTeamProjectCollection tpc = new TfsTeamProjectCollection(new Uri("https://apra-amcos.visualstudio.com"), tfsCred);
+
+
+                tpc.Authenticate();
+                this.destinationTFS = tpc;
                 this.destinationStore = (WorkItemStore)destinationTFS.GetService(typeof(WorkItemStore));
 
-                this.destinationProject = destinationStore.Projects[tpp.SelectedProjects[0].Name];
+                this.destinationProject = destinationStore.Projects["DataTeam"];
                 DestinationProjectText.Text = string.Format("{0}/{1}", destinationTFS.Uri.ToString(), destinationProject.Name);
                 writeTarget = new WorkItemWrite(destinationTFS, destinationProject);
+
+
 
                 if ((string)ConnectionStatusLabel.Content == "Select a Target project")
                 {

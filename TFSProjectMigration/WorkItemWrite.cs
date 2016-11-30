@@ -87,6 +87,18 @@ namespace TFSProjectMigration
                 case "Postponed":
                     newWorkItem.Fields["State"].Value = "Removed";
                     break;
+                case "Active":
+                    newWorkItem.Fields["State"].Value = "Active";
+                    break;
+                case "Resolved":
+                    newWorkItem.Fields["State"].Value = "Resolved";
+                    break;
+                case "Review":
+                    newWorkItem.Fields["State"].Value = "Review";
+                    break;
+                case "Proposed":
+                    newWorkItem.Fields["State"].Value = "Proposed";
+                    break;
             }
             if (newWorkItem.Fields["State"].Status != FieldStatus.Valid)
             {
@@ -259,7 +271,7 @@ namespace TFSProjectMigration
                     continue;
                 }
 
-                if (field.Name == "Assigned To" || field.Name == "Created By" || field.Name == "Activated By" || field.Name == "Closed By")
+                if (field.Name == "Assigned To" || field.Name == "Created By" || field.Name == "Activated By" || field.Name == "Closed By" || field.Name == "Changed By")
                 {
                     workItem.Open();
                     if (field.Name == "Created By")
@@ -392,7 +404,7 @@ namespace TFSProjectMigration
             //if work item is valid
             if (array.Count == 0)
             {
-                UploadAttachments(newWorkItem, workItem);
+                //UploadAttachments(newWorkItem, workItem);
                 newWorkItem.Fields["Reference Id"].Value = workItem.Id;
                 newWorkItem.Save();
                 itemMap.Add(workItem.Id, newWorkItem.Id);

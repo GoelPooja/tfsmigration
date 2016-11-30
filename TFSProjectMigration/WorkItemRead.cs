@@ -74,7 +74,7 @@ namespace TFSProjectMigration
             }
             System.Diagnostics.Debug.WriteLine(query);
             WorkItemCollection workItemCollection = store.Query(query);
-            SaveAttachments(workItemCollection);
+            //SaveAttachments(workItemCollection);
             return workItemCollection;
         }
         /* Save existing attachments of workitems to local folders of workitem ID */
