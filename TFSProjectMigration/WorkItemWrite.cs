@@ -498,12 +498,20 @@ namespace TFSProjectMigration
                 {
                     int newWorkItemID = (int)itemMap[workItem.Id];
                     WorkItem newWorkItem = store.GetWorkItem(newWorkItemID);
+                    if (!newWorkItem.Type.Name.Equals("MigrationItem"))
+                    {
+                        continue;
+                    }
 
                     foreach (WorkItemLink link in links)
                     {
                         try
                         {
                             WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
+                            if (!targetItem.Type.Name.Equals("Bug"))
+                            {
+                                continue;
+                            }
                             if (itemMap.ContainsKey(link.TargetId)  && targetItem != null)
                             {
 
@@ -518,7 +526,7 @@ namespace TFSProjectMigration
                                 {
                                     try
                                     {
-                                        WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds["Related"];
+                                        WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds["Child"];
                                         newWorkItem.Links.Add(new RelatedLink(linkTypeEnd, targetWorkItemID));
 
                                         ArrayList array = newWorkItem.Validate();

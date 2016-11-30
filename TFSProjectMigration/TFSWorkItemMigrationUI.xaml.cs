@@ -122,7 +122,7 @@ namespace TFSProjectMigration
                 this.destinationTFS = tpc;
                 this.destinationStore = (WorkItemStore)destinationTFS.GetService(typeof(WorkItemStore));
 
-                this.destinationProject = destinationStore.Projects["DataTeam"];
+                this.destinationProject = destinationStore.Projects["Test"];
                 DestinationProjectText.Text = string.Format("{0}/{1}", destinationTFS.Uri.ToString(), destinationProject.Name);
                 writeTarget = new WorkItemWrite(destinationTFS, destinationProject);
 
