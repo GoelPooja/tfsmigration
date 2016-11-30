@@ -229,7 +229,7 @@ namespace TFSProjectMigration
                             continue;
                         }
                         WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
-                        if (targetItem.Type.Name == "Bug" && targetItem.AreaPath == "CLEF")
+                        if (targetItem.Type.Name == "Bug" && (targetItem.AreaPath == "CLEF" || targetItem.AreaPath.StartsWith(@"CLEF\")))
                         {
                             newWorkItem = new WorkItem(workItemTypes["Bug"]);
                             createdby = targetItem.Fields["Created By"].Value.ToString();
@@ -248,7 +248,7 @@ namespace TFSProjectMigration
                             continue;
                         }
                         WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
-                        if (targetItem.Type.Name == "Bug" && targetItem.AreaPath == "CLEF")
+                        if (targetItem.Type.Name == "Bug" && (targetItem.AreaPath == "CLEF" || targetItem.AreaPath.StartsWith(@"CLEF\")))
                         {
                             newWorkItem = new WorkItem(workItemTypes["Bug"]);
                             createworkItem(targetItem, newWorkItem, sourceProjectName, newItems,createdby,workItem);
@@ -498,7 +498,7 @@ namespace TFSProjectMigration
                 {
                     int newWorkItemID = (int)itemMap[workItem.Id];
                     WorkItem newWorkItem = store.GetWorkItem(newWorkItemID);
-                    if (!newWorkItem.Type.Name.Equals("MigrationItem"))
+                    if (!newWorkItem.Type.Name.Equals("Migration Item"))
                     {
                         continue;
                     }
