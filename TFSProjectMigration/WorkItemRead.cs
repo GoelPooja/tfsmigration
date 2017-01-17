@@ -6,6 +6,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using System.Xml;
 using System.IO;
 using log4net;
+using System.Net;
 
 namespace TFSProjectMigration
 {
@@ -74,7 +75,7 @@ namespace TFSProjectMigration
             }
             System.Diagnostics.Debug.WriteLine(query);
             WorkItemCollection workItemCollection = store.Query(query);
-            //SaveAttachments(workItemCollection);
+            SaveAttachments(workItemCollection);
             return workItemCollection;
         }
         /* Save existing attachments of workitems to local folders of workitem ID */
@@ -90,8 +91,9 @@ namespace TFSProjectMigration
             }
 
             System.Net.WebClient webClient = new System.Net.WebClient();
-            webClient.UseDefaultCredentials = true;
-
+            //webClient.UseDefaultCredentials = true;
+            NetworkCredential netCred = new NetworkCredential(@"APRACLOUD\PGoel", "Password");
+            webClient.Credentials = netCred;
             foreach (WorkItem wi in workItemCollection)
             {
                 if (wi.AttachedFileCount > 0)
@@ -116,7 +118,7 @@ namespace TFSProjectMigration
                             }
 
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
                             logger.Info("Error downloading attachment for work item : " + wi.Id + " Type: " + wi.Type.Name);
                         }

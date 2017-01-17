@@ -220,7 +220,7 @@ namespace TFSProjectMigration
                 {
                     newWorkItem = new WorkItem(workItemTypes["Migration Item"]);
                     string createdby = workItem.Fields["Created By"].Value.ToString();
-                    createworkItem(workItem, newWorkItem, sourceProjectName, newItems,createdby);
+                    createworkItem(workItem, newWorkItem, sourceProjectName, newItems, createdby);
                     WorkItemLinkCollection links = workItem.WorkItemLinks;
                     foreach (WorkItemLink link in links)
                     {
@@ -231,14 +231,47 @@ namespace TFSProjectMigration
                         WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
                         if (targetItem.Type.Name == "Bug" && (targetItem.AreaPath == "CLEF" || targetItem.AreaPath.StartsWith(@"CLEF\")))
                         {
+                            System.Net.WebClient webClient = new System.Net.WebClient();
+                            //webClient.UseDefaultCredentials = true;
+                            System.Net.NetworkCredential netCred = new System.Net.NetworkCredential(@"APRACLOUD\PGoel", "Password");
+                            webClient.Credentials = netCred;
+                            if (targetItem.AttachedFileCount > 0)
+                            {
+                                foreach (Attachment att in targetItem.Attachments)
+                                {
+                                    try
+                                    {
+                                        String path = @"Attachments\" + targetItem.Id;
+                                        bool folderExists = Directory.Exists(path);
+                                        if (!folderExists)
+                                        {
+                                            Directory.CreateDirectory(path);
+                                        }
+                                        if (!File.Exists(path + "\\" + att.Name))
+                                        {
+                                            webClient.DownloadFile(att.Uri, path + "\\" + att.Name);
+                                        }
+                                        else
+                                        {
+                                            webClient.DownloadFile(att.Uri, path + "\\" + att.Id + "_" + att.Name);
+                                        }
+
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        logger.Info("Error downloading attachment for work item : " + targetItem.Id + " Type: " + targetItem.Type.Name);
+                                    }
+
+                                }
+                            }
                             newWorkItem = new WorkItem(workItemTypes["Bug"]);
                             createdby = targetItem.Fields["Created By"].Value.ToString();
-                            createworkItem(targetItem, newWorkItem, sourceProjectName, newItems,createdby,workItem);
+                            createworkItem(targetItem, newWorkItem, sourceProjectName, newItems, createdby, workItem);
                         }
                     }
                 }
                 else
-                { 
+                {
                     WorkItemLinkCollection links = workItem.WorkItemLinks;
                     string createdby = workItem.Fields["Created By"].Value.ToString();
                     foreach (WorkItemLink link in links)
@@ -250,8 +283,43 @@ namespace TFSProjectMigration
                         WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
                         if (targetItem.Type.Name == "Bug" && (targetItem.AreaPath == "CLEF" || targetItem.AreaPath.StartsWith(@"CLEF\")))
                         {
+                            System.Net.WebClient webClient = new System.Net.WebClient();
+                            //webClient.UseDefaultCredentials = true;
+                            System.Net.NetworkCredential netCred = new System.Net.NetworkCredential(@"APRACLOUD\PGoel", "Password");
+                            webClient.Credentials = netCred;
+                            if (targetItem.AttachedFileCount > 0)
+                            {
+                                foreach (Attachment att in targetItem.Attachments)
+                                {
+                                    try
+                                    {
+                                        String path = @"Attachments\" + targetItem.Id;
+                                        bool folderExists = Directory.Exists(path);
+                                        if (!folderExists)
+                                        {
+                                            Directory.CreateDirectory(path);
+                                        }
+                                        if (!File.Exists(path + "\\" + att.Name))
+                                        {
+                                            webClient.DownloadFile(att.Uri, path + "\\" + att.Name);
+                                        }
+                                        else
+                                        {
+                                            webClient.DownloadFile(att.Uri, path + "\\" + att.Id + "_" + att.Name);
+                                        }
+
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        logger.Info("Error downloading attachment for work item : " + targetItem.Id + " Type: " + targetItem.Type.Name);
+                                    }
+
+                                }
+                            }
                             newWorkItem = new WorkItem(workItemTypes["Bug"]);
-                            createworkItem(targetItem, newWorkItem, sourceProjectName, newItems,createdby,workItem);
+                            createdby = targetItem.Fields["Created By"].Value.ToString();
+                            newWorkItem = new WorkItem(workItemTypes["Bug"]);
+                            createworkItem(targetItem, newWorkItem, sourceProjectName, newItems, createdby, workItem);
                         }
                     }
                 }
@@ -259,6 +327,7 @@ namespace TFSProjectMigration
 
             WriteMaptoFile(sourceProjectName);
             CreateLinks(newItems, sourceStore);
+            CreateIntermediateTaskLinks(newItems, sourceStore);
         }
 
         public void createworkItem(WorkItem workItem,WorkItem newWorkItem,string sourceProjectName, List<WorkItem> newItems,string createdby,WorkItem parentItem = null)
@@ -404,7 +473,7 @@ namespace TFSProjectMigration
             //if work item is valid
             if (array.Count == 0)
             {
-                //UploadAttachments(newWorkItem, workItem);
+                UploadAttachments(newWorkItem, workItem);
                 newWorkItem.Fields["Reference Id"].Value = workItem.Id;
                 newWorkItem.Save();
                 itemMap.Add(workItem.Id, newWorkItem.Id);
@@ -508,59 +577,158 @@ namespace TFSProjectMigration
                         try
                         {
                             WorkItem targetItem = sourceStore.GetWorkItem(link.TargetId);
-                            if (!targetItem.Type.Name.Equals("Bug"))
-                            {
-                                continue;
-                            }
-                            if (itemMap.ContainsKey(link.TargetId)  && targetItem != null)
+                            if ((targetItem.Type.Name.Equals("Bug")) || (targetItem.Type.Name.Equals("Task") && targetItem.Title.StartsWith("Table Load:")))
                             {
 
-                                int targetWorkItemID = 0;
-                                if (itemMap.ContainsKey(link.TargetId))
+                                if (itemMap.ContainsKey(link.TargetId) && targetItem != null)
                                 {
-                                    targetWorkItemID = (int)itemMap[link.TargetId];
-                                }
-                                
-                                //if the link is not already created(check if target id is not in list)
-                                if (!linkedWorkItemList.Contains(link.TargetId))
-                                {
-                                    try
-                                    {
-                                        WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds["Child"];
-                                        newWorkItem.Links.Add(new RelatedLink(linkTypeEnd, targetWorkItemID));
 
-                                        ArrayList array = newWorkItem.Validate();
-                                        if (array.Count == 0)
-                                        {
-                                            newWorkItem.Save();
-                                        }
-                                        else
-                                        {
-                                            logger.Info("WorkItem Validation failed at link setup for work item: " + workItem.Id);
-                                        }
-                                    }
-                                    catch (Exception ex)
+                                    int targetWorkItemID = 0;
+                                    if (itemMap.ContainsKey(link.TargetId))
                                     {
-                                        logger.ErrorFormat("Error occured when crearting link for work item: {0} target item: {1}", workItem.Id, link.TargetId);
-                                        logger.Error("Error detail", ex);
+                                        targetWorkItemID = (int)itemMap[link.TargetId];
                                     }
 
+                                    //if the link is not already created(check if target id is not in list)
+                                    if (!linkedWorkItemList.Contains(link.TargetId))
+                                    {
+                                        try
+                                        {
+                                            if (targetItem.Type.Name.Equals("Bug"))
+                                            {
+                                                WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds["Child"];
+                                                newWorkItem.Links.Add(new RelatedLink(linkTypeEnd, targetWorkItemID));
+                                            }
+                                            else
+                                            {
+                                                WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds["Related"];
+                                                newWorkItem.Links.Add(new RelatedLink(linkTypeEnd, targetWorkItemID));
+                                            }                                    
+                                            ArrayList array = newWorkItem.Validate();
+                                            if (array.Count == 0)
+                                            {
+                                                newWorkItem.Save();
+                                            }
+                                            else
+                                            {
+                                                logger.Info("WorkItem Validation failed at link setup for work item: " + workItem.Id);
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            logger.ErrorFormat("Error occured when crearting link for work item: {0} target item: {1}", workItem.Id, link.TargetId);
+                                            logger.Error("Error detail", ex);
+                                        }
+
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                logger.Info("Link is not created for work item: " + workItem.Id + " - target item: " + link.TargetId + " does not exist");
+                                else
+                                {
+                                    logger.Info("Link is not created for work item: " + workItem.Id + " - target item: " + link.TargetId + " does not exist");
+                                }
                             }
                         }
+
                         catch (Exception)
                         {
                             logger.Warn("Link is not created for work item: " + workItem.Id + " - target item: " + link.TargetId + " is not in Source TFS or you do not have permission to access");
                         }
                     }
+                    }
                     //add the work item to list if the links are processed
                     linkedWorkItemList.Add(workItem.Id);
 
                 }
+            }
+        
+
+        private void CreateIntermediateTaskLinks(List<WorkItem> workItemCollection, WorkItemStore sourceStore)
+        {
+            List<int> linkedWorkItemList = new List<int>();
+            WorkItemCollection targetWorkItemCollection = GetWorkItemCollection();
+            foreach (WorkItem newWorkItem in targetWorkItemCollection)
+            {
+
+
+                if (newWorkItem.Type.Name.Equals("Migration Item"))
+                {
+                    continue;
+                }
+
+
+                int parentId =  int.Parse(newWorkItem.Fields["Reference Id"].Value.ToString());
+                WorkItem workItem = sourceStore.GetWorkItem(parentId);
+                WorkItemLinkCollection links = workItem.WorkItemLinks;
+            foreach (WorkItemLink interlink in links)
+            {
+                    try
+                    {
+                        WorkItem targetItem = sourceStore.GetWorkItem(interlink.TargetId);
+                        if (targetItem.Type.Name.Equals("Task") && !targetItem.Title.StartsWith("Table Load:"))
+                        {
+                            links = targetItem.WorkItemLinks;
+                            foreach (WorkItemLink link in links)
+                            {
+                                targetItem = sourceStore.GetWorkItem(link.TargetId);
+                                if (targetItem.Type.Name.Equals("Task") && targetItem.Title.Contains("Table Load:"))
+                                {
+
+                                    if (itemMap.ContainsKey(link.TargetId) && targetItem != null)
+                                    {
+
+                                        int targetWorkItemID = 0;
+                                        if (itemMap.ContainsKey(link.TargetId))
+                                        {
+                                            targetWorkItemID = (int)itemMap[link.TargetId];
+                                        }
+
+                                        //if the link is not already created(check if target id is not in list)
+                                        if (!linkedWorkItemList.Contains(link.TargetId))
+                                        {
+                                            try
+                                            {
+                                                WorkItemLinkTypeEnd linkTypeEnd = store.WorkItemLinkTypes.LinkTypeEnds["Parent"];
+                                                newWorkItem.Links.Add(new RelatedLink(linkTypeEnd, targetWorkItemID));
+
+                                                ArrayList array = newWorkItem.Validate();
+                                                if (array.Count == 0)
+                                                {
+                                                    newWorkItem.Save();
+                                                }
+                                                else
+                                                {
+                                                    logger.Info("WorkItem Validation failed at link setup for work item: " + workItem.Id);
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                logger.ErrorFormat("Error occured when crearting link for work item: {0} target item: {1}", workItem.Id, link.TargetId);
+                                                logger.Error("Error detail", ex);
+                                            }
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        logger.Info("Link is not created for work item: " + workItem.Id + " - target item: " + link.TargetId + " does not exist");
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                    catch (Exception)
+                    {
+                        logger.Warn("Link is not created for work item: " + workItem.Id + " - target item: " + interlink.TargetId + " is not in Source TFS or you do not have permission to access");
+                    }
+
+                //add the work item to list if the links are processed
+                linkedWorkItemList.Add(workItem.Id);
+
+
+            }
+
+
             }
         }
 
